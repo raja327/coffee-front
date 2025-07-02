@@ -1,18 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { apiSlice } from "./apiSlice";
 
-export const menuApi = createApi({
-  reducerPath: "menuApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/api",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.user?.token;
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["MenuItem"],
+export const menuApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getMenuItems: builder.query({
       query: ({ page = 1, limit = 10 } = {}) =>
@@ -46,6 +34,7 @@ export const menuApi = createApi({
       invalidatesTags: ["MenuItem"],
     }),
   }),
+  overrideExisting: false,
 });
 
 export const {

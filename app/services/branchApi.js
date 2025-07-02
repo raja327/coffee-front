@@ -1,19 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { apiSlice } from "./apiSlice";
 
-export const branchApi = createApi({
-  reducerPath: "branchApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/api",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.user?.token;
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["Branch"],
-
+export const branchApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getBranches: builder.query({
       query: ({ page = 1, limit = 10 } = {}) =>
@@ -36,7 +23,6 @@ export const branchApi = createApi({
       }),
       invalidatesTags: ["Branch"],
     }),
-
     deleteBranch: builder.mutation({
       query: (id) => ({
         url: `/branches/${id}`,

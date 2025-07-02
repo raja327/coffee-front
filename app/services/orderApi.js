@@ -1,19 +1,6 @@
-import { fetchBaseQuery, createApi } from "@reduxjs/toolkit/query/react";
+import { apiSlice } from "./apiSlice";
 
-export const orderApi = createApi({
-  reducerPath: "orderApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/api",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.user?.token;
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ["Order"],
-
+export const orderApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     placeOrder: builder.mutation({
       query: (orderData) => ({
@@ -21,10 +8,10 @@ export const orderApi = createApi({
         method: "POST",
         body: orderData,
       }),
+      invalidatesTags: ["Order"],
     }),
     getMyOrders: builder.query({
       query: () => "/orders/my",
-      method: "GET",
       providesTags: ["Order"],
     }),
     deleteMyOrder: builder.mutation({
@@ -34,12 +21,10 @@ export const orderApi = createApi({
       }),
       invalidatesTags: ["Order"],
     }),
-
     getAllOrders: builder.query({
       query: () => "/orders",
       providesTags: ["Order"],
     }),
-
     updateOrderStatus: builder.mutation({
       query: ({ orderId, status }) => ({
         url: `/orders/${orderId}/status`,
@@ -49,12 +34,13 @@ export const orderApi = createApi({
       invalidatesTags: ["Order"],
     }),
   }),
+  overrideExisting: false,
 });
 
 export const {
-  useGetAllOrdersQuery,
-  useGetMyOrdersQuery,
   usePlaceOrderMutation,
-  useUpdateOrderStatusMutation,
+  useGetMyOrdersQuery,
   useDeleteMyOrderMutation,
+  useGetAllOrdersQuery,
+  useUpdateOrderStatusMutation,
 } = orderApi;

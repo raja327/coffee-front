@@ -20,10 +20,11 @@ const AdminMenuPage = () => {
     isError: errorLoadingMenu,
     refetch,
   } = useGetMenuItemsQuery();
+  console.log(menuItems);
 
   const [addMenuItem, { isLoading: adding }] = useAddMenuItemMutation();
-  const [deleteMenuItem] = useDeleteMenuItemMutation();
-  const [updateMenuItem] = useUpdateMenuItemMutation();
+  const [deleteMenuItem, { isLoading: deleting }] = useDeleteMenuItemMutation();
+  const [updateMenuItem, { isLoading: updating }] = useUpdateMenuItemMutation();
 
   const {
     register,
@@ -59,19 +60,30 @@ const AdminMenuPage = () => {
       refetch();
     } catch (err) {
       console.error("Error saving menu:", err);
+      alert("Failed to save menu item. Please try again.");
     }
   };
 
   const handleEditClick = (item) => {
     setShowForm(true);
     setEditingItem(item);
-    reset(item);
+    reset({
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      category: item.category,
+    });
   };
 
   const handleDelete = async (id) => {
     if (confirm("Are you sure to delete this item?")) {
-      await deleteMenuItem(id);
-      refetch();
+      try {
+        await deleteMenuItem(id).unwrap();
+        refetch();
+      } catch (err) {
+        console.error("Failed to delete menu item:", err);
+        alert("Failed to delete menu item. Please try again.");
+      }
     }
   };
 
@@ -86,6 +98,7 @@ const AdminMenuPage = () => {
             reset();
           }}
           className="px-5 py-2 bg-[#5A3D2E] text-white rounded-lg hover:bg-[#4a3226] transition"
+          disabled={adding || updating || deleting}
         >
           {showForm ? "Back to List" : "Create Menu"}
         </button>
@@ -101,12 +114,24 @@ const AdminMenuPage = () => {
             {editingItem ? "Update Menu Item" : "Add New Menu Item"}
           </h2>
 
+          {/* Show current image preview on edit */}
+          {editingItem?.image?.url && (
+            <div className="flex justify-center mb-4">
+              <img
+                src={editingItem.image.url}
+                alt="Current Menu Item"
+                className="w-24 h-24 rounded-lg object-cover"
+              />
+            </div>
+          )}
+
           {/* Name */}
           <div>
             <input
               {...register("name", { required: "Name is required" })}
               placeholder="Item Name"
               className="w-full p-3 rounded-lg border border-[#D6BAA6] bg-white focus:outline-none focus:ring-2 focus:ring-[#A47551]"
+              disabled={adding || updating}
             />
             {errors.name && (
               <p className="text-red-500 mt-1">{errors.name.message}</p>
@@ -120,6 +145,7 @@ const AdminMenuPage = () => {
               placeholder="Description (optional)"
               rows={3}
               className="w-full p-3 rounded-lg border border-[#D6BAA6] bg-white focus:outline-none focus:ring-2 focus:ring-[#A47551] resize-none"
+              disabled={adding || updating}
             />
           </div>
 
@@ -128,9 +154,11 @@ const AdminMenuPage = () => {
             <input
               type="number"
               step="0.01"
+              min="0"
               {...register("price", { required: "Price is required" })}
               placeholder="Price (e.g. 3.99)"
               className="w-full p-3 rounded-lg border border-[#D6BAA6] bg-white focus:outline-none focus:ring-2 focus:ring-[#A47551]"
+              disabled={adding || updating}
             />
             {errors.price && (
               <p className="text-red-500 mt-1">{errors.price.message}</p>
@@ -143,6 +171,7 @@ const AdminMenuPage = () => {
               {...register("category")}
               placeholder="Category (e.g. Coffee, Tea, Dessert)"
               className="w-full p-3 rounded-lg border border-[#D6BAA6] bg-white focus:outline-none focus:ring-2 focus:ring-[#A47551]"
+              disabled={adding || updating}
             />
           </div>
 
@@ -153,6 +182,7 @@ const AdminMenuPage = () => {
               accept="image/*"
               {...register("image", { required: !editingItem })}
               className="w-full file-input file-input-bordered file-input-sm bg-white"
+              disabled={adding || updating}
             />
             {errors.image && (
               <p className="text-red-500 mt-1">{errors.image.message}</p>
@@ -163,10 +193,16 @@ const AdminMenuPage = () => {
           <div className="text-center">
             <button
               type="submit"
-              disabled={adding}
-              className="bg-[#5A3D2E] text-white px-8 py-2 rounded-lg hover:bg-[#4a3226] transition"
+              disabled={adding || updating}
+              className="bg-[#5A3D2E] text-white px-8 py-2 rounded-lg hover:bg-[#4a3226] transition disabled:opacity-60"
             >
-              {editingItem ? "Update Menu" : adding ? "Saving..." : "Add Menu"}
+              {editingItem
+                ? updating
+                  ? "Updating..."
+                  : "Update Menu"
+                : adding
+                ? "Saving..."
+                : "Add Menu"}
             </button>
           </div>
         </form>
@@ -196,7 +232,7 @@ const AdminMenuPage = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-[#E6D3C4]">
-              {menuItems?.map((item) => (
+              {menuItems.items?.map((item) => (
                 <tr
                   key={item._id}
                   className="hover:bg-[#FAF6F0] transition-colors"
@@ -217,15 +253,17 @@ const AdminMenuPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-center flex justify-center gap-6">
                     <button
                       onClick={() => handleDelete(item._id)}
-                      className="text-red-600 hover:text-red-400 transition-colors"
+                      className="text-red-600 hover:text-red-400 transition-colors disabled:opacity-60"
                       title="Delete"
+                      disabled={deleting || adding || updating}
                     >
                       <Trash2 size={20} />
                     </button>
                     <button
                       onClick={() => handleEditClick(item)}
-                      className="text-[#5A3D2E] hover:text-[#A47551] transition-colors"
+                      className="text-[#5A3D2E] hover:text-[#A47551] transition-colors disabled:opacity-60"
                       title="Edit"
+                      disabled={deleting || adding || updating}
                     >
                       <LucideEdit size={20} />
                     </button>

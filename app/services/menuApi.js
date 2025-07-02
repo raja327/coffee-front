@@ -34,7 +34,6 @@ export const menuApi = apiSlice.injectEndpoints({
       invalidatesTags: ["MenuItem"],
     }),
   }),
-  overrideExisting: false,
 });
 
 export const {

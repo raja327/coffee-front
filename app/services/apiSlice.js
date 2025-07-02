@@ -1,17 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+const baseUrl =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:5000/api"
+    : "https://coffee-back-w7ki.onrender.com/api";
 
 export const apiSlice = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({
-    baseUrl: "https://coffee-back-w7ki.onrender.com/api",
-    prepareHeaders: (headers, { getState }) => {
-      const token = getState().auth.user?.token;
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: fetchBaseQuery({ baseUrl }),
   tagTypes: ["User", "Branch", "MenuItem", "Order", "Review"],
   endpoints: () => ({}),
 });
